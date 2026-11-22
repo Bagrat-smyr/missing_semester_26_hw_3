@@ -6,10 +6,22 @@ services:
     environment:
       PORT: "8000"
       GREETING: "${GREETING:-Hello, Docker!}"
-      STORAGE: sqlite
-      DATA_FILE: /data/counter.db
+      STORAGE: redis
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7.4-alpine
     volumes:
-      - counter_data:/data
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 volumes:
-  counter_data:
+  redis_data:
